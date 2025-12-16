@@ -15,10 +15,12 @@ dependencies {
             branch = "main"
         }
     }
-    implementation("net.dv8tion:JDA:6.1.+") {
+    implementation("net.dv8tion:JDA:6.2.+") {
         exclude(module = "opus-java")
         exclude(module = "tink")
     }
+    implementation("com.zaxxer:HikariCP:7.0.+")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.+")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")

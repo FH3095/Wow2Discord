@@ -41,3 +41,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### FH custom
+/config.properties
+/hikari.properties
