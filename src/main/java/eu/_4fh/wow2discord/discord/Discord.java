@@ -45,7 +45,9 @@ public class Discord implements AutoCloseable {
         jda = JDABuilder.create(Config.discordToken, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES,
                         GatewayIntent.GUILD_MODERATION)
                 .enableCache(CacheFlag.ONLINE_STATUS)
-                .setMemberCachePolicy(MemberCachePolicy.ONLINE)
+                // To receive UserUpdateOnlineStatusEvents correctly, Users must be cached even when they are offline
+                // Otherwise UserUpdateOnlineStatusEvents will only be fired when the user is not in the cache
+                .setMemberCachePolicy(MemberCachePolicy.lru(5000))
                 // Chunking=None means for no guild load all members on startup
                 // Need to use loadMembers later to load them
                 .setChunkingFilter(ChunkingFilter.NONE)
