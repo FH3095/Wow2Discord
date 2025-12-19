@@ -2,28 +2,27 @@ package eu._4fh.wow2discord.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import eu._4fh.wow2discord.util.Singleton;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 public class Db implements AutoCloseable {
-    private static Db instance = null;
+
+    private static final Singleton<Db> instance = new Singleton<>(Db.class);
 
     public static Db i() {
-        if (instance == null) {
-            throw new IllegalStateException("Db not initialized");
-        }
-        return instance;
+        return instance.get();
     }
 
     private final HikariDataSource dataSource;
 
     public Db() {
+        instance.set(this);
         HikariConfig config = new HikariConfig("hikari.properties");
         config.setAutoCommit(false);
         config.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
         dataSource = new HikariDataSource(config);
-        instance = this;
     }
 
     Connection getConnection() throws SQLException {
@@ -31,8 +30,8 @@ public class Db implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         dataSource.close();
-        instance = null;
+        instance.unset(this);
     }
 }

@@ -1,6 +1,7 @@
 package eu._4fh.wow2discord.discord;
 
-import eu._4fh.wow2discord.Config;
+import eu._4fh.wow2discord.util.Config;
+import eu._4fh.wow2discord.util.Singleton;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -18,21 +19,17 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class Discord implements AutoCloseable {
-    private static Discord instance = null;
+
+    private static final Singleton<Discord> instance = new Singleton<>(Discord.class);
 
     public static Discord i() {
-        if (instance == null) {
-            throw new IllegalStateException("Discord not initialized");
-        }
-        return instance;
+        return instance.get();
     }
 
     private final JDA jda;
 
     public Discord(EventListener... listeners) {
-        if (instance != null) {
-            throw new IllegalStateException("Discord already initialized");
-        }
+        instance.set(this);
         int maximumThreads = Runtime.getRuntime().availableProcessors() * 5;
         // ThreadPool prefers to put a task into the queue before starting a new non-core-thread.
         // If we use a SynchronousQueue with limited number of threads, tasks that don't get a thread instantaneous
@@ -63,7 +60,6 @@ public class Discord implements AutoCloseable {
             Thread.currentThread().interrupt();
         }
         updateCommands();
-        instance = this;
     }
 
     private void updateCommands() {
@@ -80,6 +76,6 @@ public class Discord implements AutoCloseable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        instance = null;
+        instance.unset(this);
     }
 }

@@ -1,16 +1,27 @@
 package eu._4fh.wow2discord.discord;
 
-import eu._4fh.wow2discord.Log;
 import eu._4fh.wow2discord.db.Transaction;
+import eu._4fh.wow2discord.util.CronTasks;
+import eu._4fh.wow2discord.util.Log;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.events.user.update.UserUpdateOnlineStatusEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 public class LastOnlineListener extends ListenerAdapter {
 
+    private record GuildAndUserId(long guildId, long userId) {
+    }
+
     private final Logger log = Log.getLog(this);
+    private final Set<GuildAndUserId> todaySeenUsers = ConcurrentHashMap.newKeySet();
+
+    public LastOnlineListener() {
+        CronTasks.i().executeDaily(todaySeenUsers::clear);
+    }
 
     @Override
     public void onUserUpdateOnlineStatus(UserUpdateOnlineStatusEvent event) {
@@ -20,10 +31,16 @@ public class LastOnlineListener extends ListenerAdapter {
             // Old and new status are either offline or unknown, don't update database
             return;
         }
+
         long guildId = event.getGuild().getIdLong();
         long userId = event.getMember().getIdLong();
         String name = event.getMember().getEffectiveName();
-        log.info(
+        if (todaySeenUsers.contains(new GuildAndUserId(guildId, userId))) {
+            // User already seen today -> nothing to do
+            return;
+        }
+
+        log.fine(
                 () -> "Member LastOnline set guild " + guildId + " user " + userId + " with name " + name + " changing status from " + oldStatus + " to " + newStatus);
         synchronized (this) {
             try (Transaction t = new Transaction()) {
@@ -34,6 +51,7 @@ public class LastOnlineListener extends ListenerAdapter {
                 }
                 t.commit();
             }
+            todaySeenUsers.add(new GuildAndUserId(guildId, userId));
         }
     }
 }

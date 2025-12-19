@@ -1,4 +1,4 @@
-package eu._4fh.wow2discord;
+package eu._4fh.wow2discord.util;
 
 import java.io.IOException;
 import java.io.InputStream;
