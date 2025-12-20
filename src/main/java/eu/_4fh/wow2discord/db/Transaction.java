@@ -12,6 +12,10 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * A Transaction to the database. Use the Member-Variables to actually issue SQL Statements.
+ * Don't forget to {@link #commit()} before closing the transaction.
+ */
 public class Transaction implements AutoCloseable {
     private static final Map<Class<? extends Record>, Map<Byte, Constructor<?>>> createMethods = new ConcurrentHashMap<>();
     private final Connection con;
@@ -94,6 +98,10 @@ public class Transaction implements AutoCloseable {
         return result;
     }
 
+    /**
+     * Used to query data from the Database. The record class MUST have a constructor that receives the columns from
+     * the database in the order of the query.
+     */
     <T extends Record> List<T> query(Class<T> recordClass, String sql, Object... parameters) {
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             for (int i = 0; i < parameters.length; i++) {
@@ -108,6 +116,11 @@ public class Transaction implements AutoCloseable {
         }
     }
 
+    /**
+     * Execute an Update-Like statement on the database. Update-Like statements are INSERT/UPDATE/DELETE.
+     *
+     * @return The number of changed rows
+     */
     long update(String sql, Object... parameters) {
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             for (int i = 0; i < parameters.length; i++) {

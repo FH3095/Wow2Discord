@@ -3,6 +3,13 @@ package eu._4fh.wow2discord.util;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A simple Pattern, that can be used instead of a regex.
+ * Accepts the following characters in the string as patterns:<br>
+ * <code>*</code> any characters or no character at all<br>
+ * <code>+</code> any characters but at least one<br>
+ * <code>?</code> any single characters<br>
+ */
 public class SimplePattern {
     private static final Pattern splitPattern = Pattern.compile("([^*+?]*)([*+?]?)");
 

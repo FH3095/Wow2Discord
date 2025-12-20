@@ -8,6 +8,9 @@ import eu._4fh.wow2discord.util.Singleton;
 
 import java.time.Duration;
 
+/**
+ * BattleNetClients to fetch characters from the guild
+ */
 public class BnetClients implements AutoCloseable {
     private static final Singleton<BnetClients> instance = new Singleton<>(BnetClients.class);
 

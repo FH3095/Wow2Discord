@@ -11,6 +11,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+/**
+ * Class to update the last-online-Table inside the DB. (See {@link eu._4fh.wow2discord.db.DbOnlineUsers}.)
+ */
 public class LastOnlineListener extends ListenerAdapter {
 
     private record GuildAndUserId(long guildId, long userId) {

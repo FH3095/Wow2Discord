@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Class to interact with the dc_acc2wow_char-Table. Used to query and update for characters that is in the guild im Battle.net.
+ */
 public class DbGuildCharacters {
 
     public record Wow2DcMapping(long wowCharId, String wowCharServer, String wowCharName, byte wowCharRank, Long dcId,

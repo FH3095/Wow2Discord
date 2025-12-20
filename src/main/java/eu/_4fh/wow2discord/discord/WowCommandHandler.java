@@ -16,6 +16,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import java.util.*;
 import java.util.stream.Stream;
 
+/**
+ * Handles the discord commands
+ */
 public class WowCommandHandler extends ListenerAdapter {
 
     @Override
@@ -51,8 +54,8 @@ public class WowCommandHandler extends ListenerAdapter {
 
         switch (event.getFullCommandName()) {
             case "wow link" -> handleLinkCommand(event);
-            case "wow search linked" -> handleSearchLinked(event);
-            case "wow search unlinked" -> handleSearchUnlinked(event);
+            case "wow search linked" -> handleSearch(event, true);
+            case "wow search unlinked" -> handleSearch(event, false);
         }
     }
 
@@ -69,6 +72,9 @@ public class WowCommandHandler extends ListenerAdapter {
         return Optional.ofNullable(event.getOption(optionName));
     }
 
+    /**
+     * Handles the command to link a wow character to a discord account
+     */
     private void handleLinkCommand(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
         InteractionHook hook = event.getHook();
@@ -146,13 +152,5 @@ public class WowCommandHandler extends ListenerAdapter {
         }
         result.append("Found ").append(foundResults).append(" characters`");
         hook.sendMessage(result.toString()).queue();
-    }
-
-    private void handleSearchLinked(SlashCommandInteractionEvent event) {
-        handleSearch(event, true);
-    }
-
-    private void handleSearchUnlinked(SlashCommandInteractionEvent event) {
-        handleSearch(event, false);
     }
 }

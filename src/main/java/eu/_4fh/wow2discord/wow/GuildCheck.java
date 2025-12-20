@@ -16,6 +16,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * Regularly checks the WOW guild for the characters and handles the difference.
+ */
 public class GuildCheck {
 
     private final Logger log = Log.getLog(this);
@@ -36,9 +39,13 @@ public class GuildCheck {
             WowDcComparator comparator = new WowDcComparator(guild);
             announceAndSaveNewCharacters(guild, comparator.getNewInGuild(), comparator.getBnetCharacters());
             updateCharacters(guild, comparator.getStayedInGuildCharacters());
+            updateDiscordUsersMissingInGuild(guild, comparator.getRemovedFromGuild());
         }
     }
 
+    /**
+     * Announce new characters to the channel und save them to the database
+     */
     private void announceAndSaveNewCharacters(DbGuild guild, Set<Long> newInGuild, Map<Long, BattleNetWowCharacter> bnetCharacters) {
         Discord discord = Discord.i();
         int announcedCharacters = 0;
@@ -62,6 +69,9 @@ public class GuildCheck {
         }
     }
 
+    /**
+     * Update existing characters from the guild to the database
+     */
     private void updateCharacters(DbGuild guild, Map<Long, BattleNetWowCharacter> stayedInGuildCharacters) {
         try (Transaction t = new Transaction()) {
             for (BattleNetWowCharacter character : stayedInGuildCharacters.values()) {
@@ -71,5 +81,9 @@ public class GuildCheck {
             }
             t.commit();
         }
+    }
+
+    private void updateDiscordUsersMissingInGuild(DbGuild guild, Set<Long> missingInGuild) {
+        // TODO Implement
     }
 }

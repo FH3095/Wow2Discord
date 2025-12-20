@@ -7,6 +7,9 @@ import eu._4fh.wow2discord.util.Singleton;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+/**
+ * Class to create a DB ConnectionPool. To use the Database, actually use the {@link Transaction}
+ */
 public class Db implements AutoCloseable {
 
     private static final Singleton<Db> instance = new Singleton<>(Db.class);

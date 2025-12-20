@@ -8,6 +8,9 @@ import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Utility to execute tasks regularly.
+ */
 public class CronTasks implements AutoCloseable {
 
     private static final Singleton<CronTasks> instance = new Singleton<>(CronTasks.class);

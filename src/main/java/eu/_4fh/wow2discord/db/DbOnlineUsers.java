@@ -3,6 +3,10 @@ package eu._4fh.wow2discord.db;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * Class to update the table dc_online_users.
+ * There is saved when a user was last seen online.
+ */
 public class DbOnlineUsers {
     private final Transaction t;
 
