@@ -3,8 +3,10 @@ package eu._4fh.wow2discord.util;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,8 +23,7 @@ public class CronTasks implements AutoCloseable {
 
     private final Logger log = Log.getLog(this);
     private final ScheduledExecutorService taskStarter = Executors.newSingleThreadScheduledExecutor();
-    private final ExecutorService taskExecutor = Executors.newCachedThreadPool();
-    private final Random rnd = new Random();
+    private final ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
 
     public CronTasks() {
         instance.set(this);
@@ -50,8 +51,7 @@ public class CronTasks implements AutoCloseable {
         Instant now = Instant.now();
         Instant nextDayStart = now.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
         long secondsTillNextDay = ChronoUnit.SECONDS.between(now, nextDayStart);
-        taskStarter.scheduleAtFixedRate(() -> executeAndLog(command), secondsTillNextDay, TimeUnit.DAYS.toSeconds(1),
-                TimeUnit.SECONDS);
+        taskStarter.scheduleAtFixedRate(() -> executeAndLog(command), secondsTillNextDay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
     }
 
     public void executeRegularly(Runnable command, Duration interval) {
@@ -60,7 +60,6 @@ public class CronTasks implements AutoCloseable {
             throw new IllegalArgumentException("Interval " + interval + " is less than one second");
         }
         // We execute the task directly with some delay
-        taskStarter.scheduleWithFixedDelay(() -> executeAndLog(command), rnd.nextInt(60) + 60, intervalInSeconds,
-                TimeUnit.SECONDS);
+        taskStarter.scheduleWithFixedDelay(() -> executeAndLog(command), 60, intervalInSeconds, TimeUnit.SECONDS);
     }
 }

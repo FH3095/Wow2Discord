@@ -14,6 +14,7 @@ public class Config {
     public static final String bnetApiSecret;
     public static final int guildCheckInterval;
     public static final int maxAnnouncedCharactersAtOnce;
+    public static final int discordCheckInterval;
 
     static {
         Properties props = new Properties();
@@ -27,6 +28,7 @@ public class Config {
         bnetApiSecret = getStr(props, "bnet_api_secret");
         guildCheckInterval = Integer.decode(getStr(props, "guild_check_interval"));
         maxAnnouncedCharactersAtOnce = Integer.decode(getStr(props, "max_announced_characters_at_once"));
+        discordCheckInterval = Integer.decode(getStr(props, "discord_check_interval"));
     }
 
     private Config() {
