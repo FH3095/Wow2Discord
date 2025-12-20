@@ -5,6 +5,7 @@ import eu._4fh.wow2discord.util.Singleton;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -77,5 +79,11 @@ public class Discord implements AutoCloseable {
             Thread.currentThread().interrupt();
         }
         instance.unset(this);
+    }
+
+    public void sendMessage(long channelId, String message) {
+        TextChannel channel = jda.getTextChannelById(channelId);
+        Objects.requireNonNull(channel, "Unknown channel with id " + channelId + " for message " + message);
+        channel.sendMessage(message).queue();
     }
 }

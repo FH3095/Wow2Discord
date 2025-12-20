@@ -43,5 +43,6 @@ bin/
 .DS_Store
 
 ### FH custom
+/bot.pid
 /config.properties
 /hikari.properties

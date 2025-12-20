@@ -15,6 +15,7 @@ dependencies {
             branch = "main"
         }
     }
+    implementation("com.google.guava:guava:33.5.0-jre")
     implementation("net.dv8tion:JDA:6.2.+") {
         exclude(module = "opus-java")
         exclude(module = "tink")

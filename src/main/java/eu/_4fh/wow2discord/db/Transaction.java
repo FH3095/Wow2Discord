@@ -1,7 +1,10 @@
 package eu._4fh.wow2discord.db;
 
+import com.google.common.primitives.UnsignedLong;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +16,8 @@ public class Transaction implements AutoCloseable {
     private static final Map<Class<? extends Record>, Map<Byte, Constructor<?>>> createMethods = new ConcurrentHashMap<>();
     private final Connection con;
     public final DbOnlineUsers onlineUsers;
+    public final DbGuilds guilds;
+    public final DbGuildCharacters guildCharacters;
 
     public Transaction() {
         try {
@@ -21,6 +26,8 @@ public class Transaction implements AutoCloseable {
             throw new RuntimeException(e);
         }
         onlineUsers = new DbOnlineUsers(this);
+        guilds = new DbGuilds(this);
+        guildCharacters = new DbGuildCharacters(this);
     }
 
     public void commit() {
@@ -41,7 +48,7 @@ public class Transaction implements AutoCloseable {
         }
     }
 
-    static record ExistsRecord(int i) {
+    record ExistsRecord(int i) {
     }
 
     private Map<Byte, Constructor<?>> computeCreateMethods(Class<? extends Record> recordClass) {
@@ -75,7 +82,8 @@ public class Transaction implements AutoCloseable {
         while (rs.next()) {
             Object[] parameters = new Object[parameterClasses.length];
             for (int i = 0; i < parameterClasses.length; i++) {
-                parameters[i] = rs.getObject(i + 1, parameterClasses[i]);
+                Class<?> parameterClass = paramClassToDbClass(parameterClasses[i]);
+                parameters[i] = paramFromDb(rs.getObject(i + 1, parameterClass));
             }
             try {
                 result.add((T) constructor.newInstance(parameters));
@@ -89,7 +97,7 @@ public class Transaction implements AutoCloseable {
     <T extends Record> List<T> query(Class<T> recordClass, String sql, Object... parameters) {
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             for (int i = 0; i < parameters.length; i++) {
-                stmt.setObject(i + 1, parameters[i]);
+                stmt.setObject(i + 1, paramToDb(parameters[i]));
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -103,11 +111,35 @@ public class Transaction implements AutoCloseable {
     long update(String sql, Object... parameters) {
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             for (int i = 0; i < parameters.length; i++) {
-                stmt.setObject(i + 1, parameters[i]);
+                stmt.setObject(i + 1, paramToDb(parameters[i]));
             }
             return stmt.executeLargeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private Object paramToDb(Object param) {
+        if (param instanceof Long longObject) {
+            return UnsignedLong.fromLongBits(longObject).bigIntegerValue();
+        } else {
+            return param;
+        }
+    }
+
+    private Object paramFromDb(Object param) {
+        if (param instanceof BigInteger bigInt) {
+            return UnsignedLong.valueOf(bigInt).longValue();
+        } else {
+            return param;
+        }
+    }
+
+    private Class<?> paramClassToDbClass(Class<?> paramClass) {
+        if (Long.class.equals(paramClass) || long.class.equals(paramClass)) {
+            return BigInteger.class;
+        } else {
+            return paramClass;
         }
     }
 }

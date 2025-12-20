@@ -10,6 +10,10 @@ import java.util.Properties;
 
 public class Config {
     public static final String discordToken;
+    public static final String bnetApiKey;
+    public static final String bnetApiSecret;
+    public static final int guildCheckInterval;
+    public static final int maxAnnouncedCharactersAtOnce;
 
     static {
         Properties props = new Properties();
@@ -19,6 +23,10 @@ public class Config {
             throw new RuntimeException(e);
         }
         discordToken = getStr(props, "discord_token");
+        bnetApiKey = getStr(props, "bnet_api_key");
+        bnetApiSecret = getStr(props, "bnet_api_secret");
+        guildCheckInterval = Integer.decode(getStr(props, "guild_check_interval"));
+        maxAnnouncedCharactersAtOnce = Integer.decode(getStr(props, "max_announced_characters_at_once"));
     }
 
     private Config() {
