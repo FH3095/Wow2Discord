@@ -12,7 +12,7 @@ public class DbGuildCharacters {
     public record WowCharId(long charId) {
     }
 
-    public record Wow2Dc(long charId, long dcId) {
+    public record Wow2Dc(long guildId, long charId, long dcId, String dcName) {
     }
 
     private final Transaction t;
@@ -32,5 +32,12 @@ public class DbGuildCharacters {
                 "INSERT INTO dc_acc2wow_char (guild_id, wow_char_id, wow_char_server, wow_char_name) VALUES (?, ?, ?, ?)",
                 wowCharacter.guildId(), wowCharacter.wowCharId(), wowCharacter.wowCharServer(),
                 wowCharacter.wowCharName());
+    }
+
+    public boolean update(Wow2Dc wow2Dc) {
+        long updated = t.update(
+                "UPDATE dc_acc2wow_char SET dc_id = ?, dc_member_name = ? WHERE guild_id = ? AND wow_char_id = ?",
+                wow2Dc.dcId, wow2Dc.dcName, wow2Dc.guildId, wow2Dc.charId);
+        return updated > 0;
     }
 }

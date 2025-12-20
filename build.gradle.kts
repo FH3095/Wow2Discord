@@ -17,6 +17,7 @@ dependencies {
         }
     }
     implementation("com.google.guava:guava:33.5.0-jre")
+    implementation("org.slf4j:slf4j-jdk14:2.0.+")
     implementation("net.dv8tion:JDA:6.2.+") {
         exclude(module = "opus-java")
         exclude(module = "tink")
