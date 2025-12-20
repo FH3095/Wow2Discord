@@ -6,7 +6,12 @@ import java.util.stream.Collectors;
 
 public class DbGuildCharacters {
 
-    public record WowCharacter(long guildId, long wowCharId, String wowCharServer, String wowCharName) {
+    public record Wow2DcMapping(long wowCharId, String wowCharServer, String wowCharName, byte wowCharRank, Long dcId,
+                                String dcName) {
+    }
+
+    public record WowCharacter(long guildId, long wowCharId, String wowCharServer, String wowCharName,
+                               short wowCharRank) {
     }
 
     public record WowCharId(long charId) {
@@ -27,11 +32,17 @@ public class DbGuildCharacters {
         return charIds.stream().map(WowCharId::charId).collect(Collectors.toUnmodifiableSet());
     }
 
+    public List<Wow2DcMapping> getAllMappingsOrderedByRank(long guildId) {
+        return t.query(Wow2DcMapping.class,
+                "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? ORDER BY wow_char_rank ASC",
+                guildId);
+    }
+
     public void insert(WowCharacter wowCharacter) {
         t.update(
-                "INSERT INTO dc_acc2wow_char (guild_id, wow_char_id, wow_char_server, wow_char_name) VALUES (?, ?, ?, ?)",
+                "INSERT INTO dc_acc2wow_char (guild_id, wow_char_id, wow_char_server, wow_char_name, wow_char_rank) VALUES (?, ?, ?, ?, ?)",
                 wowCharacter.guildId(), wowCharacter.wowCharId(), wowCharacter.wowCharServer(),
-                wowCharacter.wowCharName());
+                wowCharacter.wowCharName(), wowCharacter.wowCharRank());
     }
 
     public boolean update(Wow2Dc wow2Dc) {

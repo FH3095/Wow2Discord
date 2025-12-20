@@ -12,6 +12,7 @@ import eu._4fh.wow2discord.util.Log;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -54,7 +55,7 @@ public class GuildCheck {
                 }
                 t.guildCharacters.insert(
                         new DbGuildCharacters.WowCharacter(guild.guildId(), character.id, character.realmSlug,
-                                character.name));
+                                character.name, Objects.requireNonNull(character.guildRank)));
             }
             t.commit();
         }

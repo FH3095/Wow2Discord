@@ -7,8 +7,6 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.hooks.EventListener;
-import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.commands.ICommandReference;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -19,8 +17,6 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,10 +31,6 @@ public class Discord implements AutoCloseable {
     }
 
     private final JDA jda;
-
-    long linkCommandId;
-    long searchLinkedCommandId;
-    long searchUnlinkedCommandId;
 
     public Discord(EventListener... listeners) {
         instance.set(this);
@@ -99,23 +91,7 @@ public class Discord implements AutoCloseable {
                 .addOption(OptionType.USER, "discord-user", "Characters for this discord user", false);
         searchCmd.addSubcommands(searchLinkedCmd);
 
-        List<Command> commands = jda.updateCommands().addCommands(wowCmd).complete();
-        List<ICommandReference> allCommands = new ArrayList<>();
-        for (Command command : commands) {
-            allCommands.add(command);
-            allCommands.addAll(command.getSubcommands());
-            for (Command.SubcommandGroup subcommandGroup : command.getSubcommandGroups()) {
-                allCommands.addAll(subcommandGroup.getSubcommands());
-            }
-        }
-
-        for (ICommandReference command : allCommands) {
-            switch (command.getFullCommandName()) {
-                case "wow link" -> linkCommandId = command.getIdLong();
-                case "wow search linked" -> searchLinkedCommandId = command.getIdLong();
-                case "wow search unlinked" -> searchUnlinkedCommandId = command.getIdLong();
-            }
-        }
+        jda.updateCommands().addCommands(wowCmd).complete();
     }
 
     public void close() {
