@@ -72,7 +72,7 @@ public class Discord implements AutoCloseable {
 
         SubcommandData linkCmd = new SubcommandData("link",
                 "Adds a link from a wow-character to a discord account").addOption(OptionType.INTEGER, "wow-char-id",
-                        "WOW character id", true)
+                        "WOW character id", true, true)
                 .addOption(OptionType.USER, "discord-user", "Discord user to link character to", true);
         wowCmd.addSubcommands(linkCmd);
 

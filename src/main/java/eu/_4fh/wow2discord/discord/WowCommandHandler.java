@@ -2,19 +2,46 @@ package eu._4fh.wow2discord.discord;
 
 import eu._4fh.wow2discord.db.DbGuildCharacters;
 import eu._4fh.wow2discord.db.Transaction;
+import eu._4fh.wow2discord.util.Config;
 import eu._4fh.wow2discord.util.SimplePattern;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class WowCommandHandler extends ListenerAdapter {
+
+    @Override
+    public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
+        if (event.getGuild() == null) {
+            // Command not used in a server context
+            return;
+        }
+        if (!event.getFullCommandName().equals("wow link") || !event.getFocusedOption()
+                .getName()
+                .equals("wow-char-id")) {
+            return;
+        }
+        long guildId = guildId(event);
+        String currentValue = event.getFocusedOption().getValue();
+
+        List<Command.Choice> choices = new ArrayList<>(25);
+        try (Transaction t = new Transaction()) {
+            Stream<DbGuildCharacters.Wow2DcMapping> mappings = t.guildCharacters.getAllUnlinkedMappingsWithNameMatchOrderedByRankLimit25(
+                    guildId, currentValue + "%").stream();
+            mappings.forEach(mapping -> choices.add(
+                    new Command.Choice(mapping.wowCharName() + "-" + mapping.wowCharServer(), mapping.wowCharId())));
+        }
+        event.replyChoices(choices).queue();
+    }
+
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null) {
@@ -29,7 +56,7 @@ public class WowCommandHandler extends ListenerAdapter {
         }
     }
 
-    private long guildId(SlashCommandInteractionEvent event) {
+    private long guildId(Interaction event) {
         return Objects.requireNonNull(event.getGuild()).getIdLong();
     }
 
@@ -95,7 +122,7 @@ public class WowCommandHandler extends ListenerAdapter {
         }
 
 
-        filteredMappings = filteredMappings.limit(20);
+        filteredMappings = filteredMappings.limit(Config.maxAnnouncedCharactersAtOnce);
         int foundResults = 0;
         StringBuilder result = new StringBuilder("`");
         for (Iterator<DbGuildCharacters.Wow2DcMapping> it = filteredMappings.iterator(); it.hasNext(); ) {

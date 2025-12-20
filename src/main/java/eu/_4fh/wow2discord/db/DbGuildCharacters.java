@@ -38,6 +38,12 @@ public class DbGuildCharacters {
                 guildId);
     }
 
+    public List<Wow2DcMapping> getAllUnlinkedMappingsWithNameMatchOrderedByRankLimit25(long guildId, String namePattern) {
+        return t.query(Wow2DcMapping.class,
+                "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? AND wow_char_name LIKE ? AND dc_id IS NULL ORDER BY wow_char_rank ASC LIMIT 25",
+                guildId, namePattern);
+    }
+
     public void insert(WowCharacter wowCharacter) {
         t.update(
                 "INSERT INTO dc_acc2wow_char (guild_id, wow_char_id, wow_char_server, wow_char_name, wow_char_rank) VALUES (?, ?, ?, ?, ?)",
