@@ -45,6 +45,13 @@ public class DbGuildCharacters {
                 wowCharacter.wowCharName(), wowCharacter.wowCharRank());
     }
 
+    public void update(WowCharacter wowCharacter) {
+        t.update(
+                "UPDATE dc_acc2wow_char SET wow_char_server = ?, wow_char_name = ?, wow_char_rank = ? WHERE guild_id = ? AND wow_char_id = ?",
+                wowCharacter.wowCharServer(), wowCharacter.wowCharName(), wowCharacter.wowCharRank(),
+                wowCharacter.guildId(), wowCharacter.wowCharId());
+    }
+
     public boolean update(Wow2Dc wow2Dc) {
         long updated = t.update(
                 "UPDATE dc_acc2wow_char SET dc_id = ?, dc_member_name = ? WHERE guild_id = ? AND wow_char_id = ?",

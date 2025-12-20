@@ -35,6 +35,7 @@ public class GuildCheck {
         for (DbGuild guild : guilds) {
             WowDcComparator comparator = new WowDcComparator(guild);
             announceAndSaveNewCharacters(guild, comparator.getNewInGuild(), comparator.getBnetCharacters());
+            updateCharacters(guild, comparator.getStayedInGuildCharacters());
         }
     }
 
@@ -55,7 +56,18 @@ public class GuildCheck {
                 }
                 t.guildCharacters.insert(
                         new DbGuildCharacters.WowCharacter(guild.guildId(), character.id, character.realmSlug,
-                                character.name, Objects.requireNonNull(character.guildRank)));
+                                character.name, Objects.requireNonNullElse(character.guildRank, (byte) 127)));
+            }
+            t.commit();
+        }
+    }
+
+    private void updateCharacters(DbGuild guild, Map<Long, BattleNetWowCharacter> stayedInGuildCharacters) {
+        try (Transaction t = new Transaction()) {
+            for (BattleNetWowCharacter character : stayedInGuildCharacters.values()) {
+                t.guildCharacters.update(
+                        new DbGuildCharacters.WowCharacter(guild.guildId(), character.id, character.realmSlug,
+                                character.name, Objects.requireNonNullElse(character.guildRank, (byte) 127)));
             }
             t.commit();
         }

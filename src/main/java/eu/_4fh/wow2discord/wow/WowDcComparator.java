@@ -8,10 +8,7 @@ import eu._4fh.abstract_bnet_api.restclient.requests.BattleNetGuildMembersReques
 import eu._4fh.wow2discord.db.DbGuilds.DbGuild;
 import eu._4fh.wow2discord.db.Transaction;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,6 +16,7 @@ public class WowDcComparator {
 
     private final DbGuild guild;
     private final Map<Long, BattleNetWowCharacter> bnetCharacters;
+    private final Map<Long, BattleNetWowCharacter> stayedInGuildCharacters;
     private final Set<Long> newInGuild;
     private final Set<Long> removedFromGuild;
 
@@ -37,6 +35,10 @@ public class WowDcComparator {
         tmp = new HashSet<>(dcCharacters);
         tmp.removeAll(bnetCharacters.keySet());
         removedFromGuild = Collections.unmodifiableSet(tmp);
+
+        Map<Long, BattleNetWowCharacter> tmpMap = new HashMap<>(bnetCharacters);
+        tmpMap.keySet().removeAll(newInGuild);
+        stayedInGuildCharacters = Collections.unmodifiableMap(tmpMap);
     }
 
     private Map<Long, BattleNetWowCharacter> fetchBnetCharacters() {
@@ -51,6 +53,10 @@ public class WowDcComparator {
 
     public Map<Long, BattleNetWowCharacter> getBnetCharacters() {
         return bnetCharacters;
+    }
+
+    public Map<Long, BattleNetWowCharacter> getStayedInGuildCharacters() {
+        return stayedInGuildCharacters;
     }
 
     public Set<Long> getNewInGuild() {
