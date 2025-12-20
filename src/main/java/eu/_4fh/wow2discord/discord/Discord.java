@@ -8,8 +8,10 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -65,10 +67,30 @@ public class Discord implements AutoCloseable {
     }
 
     private void updateCommands() {
-        CommandData cmd = Commands.slash("wow-link-character", "Adds a link from a wow-character to a discord account")
-                .addOption(OptionType.INTEGER, "wow-char-id", "WOW character id", true)
+        SlashCommandData wowCmd = Commands.slash("wow", "WOW Commands");
+
+        SubcommandData linkCmd = new SubcommandData("link",
+                "Adds a link from a wow-character to a discord account").addOption(OptionType.INTEGER, "wow-char-id",
+                        "WOW character id", true)
                 .addOption(OptionType.USER, "discord-user", "Discord user to link character to", true);
-        jda.updateCommands().addCommands(cmd).queue();
+        wowCmd.addSubcommands(linkCmd);
+
+        SubcommandGroupData searchCmd = new SubcommandGroupData("search", "Commands to search");
+        wowCmd.addSubcommandGroups(searchCmd);
+
+        SubcommandData searchUnlinkedCmd = new SubcommandData("unlinked",
+                "Search for not yet linked characters").addOption(OptionType.STRING, "char-name",
+                        "Pattern of character name", false)
+                .addOption(OptionType.INTEGER, "guild-rank", "Rank of the characters in the guild", false);
+        searchCmd.addSubcommands(searchUnlinkedCmd);
+
+        SubcommandData searchLinkedCmd = new SubcommandData("linked", "Search for already linked characters").addOption(
+                        OptionType.STRING, "char-name", "Pattern of character name", false)
+                .addOption(OptionType.INTEGER, "guild-rank", "Rank of the characters in the guild", false)
+                .addOption(OptionType.USER, "discord-user", "Characters for this discord user", false);
+        searchCmd.addSubcommands(searchLinkedCmd);
+
+        jda.updateCommands().addCommands(wowCmd).queue();
     }
 
     public void close() {
