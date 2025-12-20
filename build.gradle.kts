@@ -1,10 +1,15 @@
 plugins {
     id("java")
+    id("application")
     id("com.gradleup.shadow") version "9.3.+"
 }
 
 group = "eu.4fh"
 version = "1.0"
+
+application {
+    mainClass.set("eu._4fh.wow2discord.Main")
+}
 
 repositories {
     mavenCentral()
