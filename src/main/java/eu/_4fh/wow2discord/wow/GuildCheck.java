@@ -58,8 +58,8 @@ public class GuildCheck {
                 if (announcedCharacters < Config.maxAnnouncedCharactersAtOnce) {
                     String message = "New character in guild: " + character.name + "-" + character.realmSlug + " (" +
                             character.id + ") with rank " + character.guildRank +
-                            ". To assign the character to a discord account use /wow-link-character " + character.id +
-                            " DiscordUsername";
+                            ". To assign the character to a discord account use `/wow link " + character.id +
+                            " DiscordUsername`";
                     discord.sendMessage(guild.channelId(), message);
                     announcedCharacters++;
                 }
