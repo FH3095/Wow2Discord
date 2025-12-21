@@ -3,6 +3,7 @@ package eu._4fh.wow2discord.discord;
 import eu._4fh.wow2discord.db.DbGuildCharacters.Wow2DcMapping;
 import eu._4fh.wow2discord.db.DbGuilds.DbGuild;
 import eu._4fh.wow2discord.db.Transaction;
+import eu._4fh.wow2discord.util.Config;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogChange;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
@@ -32,15 +33,15 @@ public class DiscordRoleUpdater {
         this.dbGuild = dbGuild;
         this.members = members.stream().collect(Collectors.toMap(Member::getIdLong, identity()));
 
-        wowRanksToRoles = getWowRanksToRoles(dcGuild);
+        wowRanksToRoles = getWowRanksToRoles(dbGuild.guildId());
         managedRoles = new HashSet<>(wowRanksToRoles.size());
         wowRanksToRoles.values().forEach(managedRoles::addAll);
         addedRoles = getAddedRolesPerUserWithin7Days(dcGuild);
     }
 
-    private Map<Byte, Set<Long>> getWowRanksToRoles(Guild dcGuild) {
+    private Map<Byte, Set<Long>> getWowRanksToRoles(long guildId) {
         try (Transaction t = new Transaction()) {
-            return t.guilds.getWowRanksToRoleIds(dbGuild.guildId());
+            return t.guilds.getWowRanksToRoleIds(guildId);
         }
     }
 
@@ -124,7 +125,21 @@ public class DiscordRoleUpdater {
         if (newRoles.isEmpty() && removeRoles.isEmpty()) {
             return;
         }
-        Map<Long, String> roleNames =
-                dcGuild.getRoles().stream().collect(Collectors.toMap(Role::getIdLong, Role::getName));
+
+        Member member = members.get(userId);
+        List<Role> newRoleObjects = newRoles.stream().map(dcGuild::getRoleById).toList();
+        List<Role> removeRoleObjects = removeRoles.stream().map(dcGuild::getRoleById).toList();
+        if (Config.doChangeRoles) {
+            dcGuild.modifyMemberRoles(member, newRoleObjects, removeRoleObjects).queue();
+        } else {
+            String newRoleNames =
+                    newRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
+            String removeRoleNames =
+                    removeRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
+            Discord.i()
+                   .sendMessage(dbGuild.channelId(),
+                           "Change roles for " + member.getEffectiveName() + ". New Roles: " + newRoleNames +
+                                   "; Remove Roles: " + removeRoleNames);
+        }
     }
 }
