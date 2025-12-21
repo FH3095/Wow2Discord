@@ -15,6 +15,7 @@ public class Config {
     public static final int guildCheckInterval;
     public static final int maxAnnouncedCharactersAtOnce;
     public static final int discordCheckInterval;
+    public static final boolean doChangeRoles;
 
     static {
         Properties props = new Properties();
@@ -29,6 +30,7 @@ public class Config {
         guildCheckInterval = Integer.decode(getStr(props, "guild_check_interval"));
         maxAnnouncedCharactersAtOnce = Integer.decode(getStr(props, "max_announced_characters_at_once"));
         discordCheckInterval = Integer.decode(getStr(props, "discord_check_interval"));
+        doChangeRoles = Boolean.parseBoolean(getStr(props, "do_change_roles"));
     }
 
     private Config() {

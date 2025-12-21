@@ -39,7 +39,6 @@ public class GuildCheck {
             WowDcComparator comparator = new WowDcComparator(guild);
             announceAndSaveNewCharacters(guild, comparator.getNewInGuild(), comparator.getBnetCharacters());
             updateCharacters(guild, comparator.getStayedInGuildCharacters());
-            updateDiscordUsersMissingInGuild(guild, comparator.getRemovedFromGuild());
         }
     }
 
@@ -81,9 +80,5 @@ public class GuildCheck {
             }
             t.commit();
         }
-    }
-
-    private void updateDiscordUsersMissingInGuild(DbGuild guild, Set<Long> missingInGuild) {
-        // TODO Implement
     }
 }

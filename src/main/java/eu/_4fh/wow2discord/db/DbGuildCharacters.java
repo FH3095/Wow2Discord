@@ -14,7 +14,7 @@ public class DbGuildCharacters {
     }
 
     public record WowCharacter(long guildId, long wowCharId, String wowCharServer, String wowCharName,
-                               short wowCharRank) {
+                               byte wowCharRank) {
     }
 
     public record WowCharId(long charId) {
