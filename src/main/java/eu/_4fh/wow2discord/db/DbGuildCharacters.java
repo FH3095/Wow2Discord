@@ -63,4 +63,8 @@ public class DbGuildCharacters {
     public void update(long guildId, long dcId, String dcName) {
         t.update("UPDATE dc_acc2wow_char SET dc_member_name = ? WHERE guild_id = ? AND dc_id = ?", dcName, guildId, dcId);
     }
+
+    public void remove(long guildId, long wowCharacterId) {
+        t.update("DELETE FROM dc_acc2wow_char WHERE guild_id = ? AND wow_char_id = ?", guildId, wowCharacterId);
+    }
 }
