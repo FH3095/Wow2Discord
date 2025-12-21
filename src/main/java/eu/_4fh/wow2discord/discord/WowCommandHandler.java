@@ -27,9 +27,8 @@ public class WowCommandHandler extends ListenerAdapter {
             // Command not used in a server context
             return;
         }
-        if (!event.getFullCommandName().equals("wow link") || !event.getFocusedOption()
-                .getName()
-                .equals("wow-char-id")) {
+        if (!event.getFullCommandName().equals("wow link") ||
+                !event.getFocusedOption().getName().equals("wow-char-id")) {
             return;
         }
         long guildId = guildId(event);
@@ -37,10 +36,11 @@ public class WowCommandHandler extends ListenerAdapter {
 
         List<Command.Choice> choices = new ArrayList<>(25);
         try (Transaction t = new Transaction()) {
-            Stream<DbGuildCharacters.Wow2DcMapping> mappings = t.guildCharacters.getAllUnlinkedMappingsWithNameMatchOrderedByRankLimit25(
-                    guildId, currentValue + "%").stream();
-            mappings.forEach(mapping -> choices.add(
-                    new Command.Choice(mapping.wowCharName() + "-" + mapping.wowCharServer(), mapping.wowCharId())));
+            Stream<DbGuildCharacters.Wow2DcMapping> mappings =
+                    t.guildCharacters.getAllUnlinkedMappingsWithNameMatchOrderedByRankLimit25(guildId,
+                            currentValue + "%").stream();
+            mappings.forEach(mapping -> choices.add(new Command.Choice(
+                    mapping.wowCharName() + "-" + mapping.wowCharServer(), mapping.wowCharId())));
         }
         event.replyChoices(choices).queue();
     }
@@ -87,8 +87,8 @@ public class WowCommandHandler extends ListenerAdapter {
             return;
         }
         try (Transaction t = new Transaction()) {
-            DbGuildCharacters.Wow2Dc wow2Dc = new DbGuildCharacters.Wow2Dc(guildId, wowCharId, member.getIdLong(),
-                    member.getEffectiveName());
+            DbGuildCharacters.Wow2Dc wow2Dc =
+                    new DbGuildCharacters.Wow2Dc(guildId, wowCharId, member.getIdLong(), member.getEffectiveName());
             if (!t.guildCharacters.update(wow2Dc)) {
                 hook.editOriginal("Character ID not found").queue();
             } else {
@@ -106,8 +106,8 @@ public class WowCommandHandler extends ListenerAdapter {
         long guildId = guildId(event);
         Long userId = optOpt(event, "discord-user").map(opt -> opt.getAsUser().getIdLong()).orElse(null);
         Byte charRank = optOpt(event, "guild-rank").map(opt -> (byte) opt.getAsLong()).orElse(null);
-        SimplePattern charNamePattern = optOpt(event, "char-name").map(opt -> new SimplePattern(opt.getAsString()))
-                .orElse(null);
+        SimplePattern charNamePattern =
+                optOpt(event, "char-name").map(opt -> new SimplePattern(opt.getAsString())).orElse(null);
         Stream<DbGuildCharacters.Wow2DcMapping> filteredMappings;
         try (Transaction t = new Transaction()) {
             filteredMappings = t.guildCharacters.getAllMappingsOrderedByRank(guildId).stream();
@@ -135,11 +135,13 @@ public class WowCommandHandler extends ListenerAdapter {
             foundResults++;
             DbGuildCharacters.Wow2DcMapping mapping = it.next();
             result.append(mapping.wowCharName())
-                    .append("-")
-                    .append(mapping.wowCharServer())
-                    .append(" (")
-                    .append(mapping.wowCharId())
-                    .append(")");
+                  .append("-")
+                  .append(mapping.wowCharServer())
+                  .append(" (Rank ")
+                  .append(mapping.wowCharRank())
+                  .append(") (")
+                  .append(mapping.wowCharId())
+                  .append(")");
             if (alreadyLinkedChars) {
                 result.append(" to ").append(mapping.dcName()).append(" (").append(mapping.dcId()).append(")");
             }
