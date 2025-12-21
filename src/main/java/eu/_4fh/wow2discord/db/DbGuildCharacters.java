@@ -29,6 +29,12 @@ public class DbGuildCharacters {
         this.t = t;
     }
 
+    public Wow2DcMapping getWowCharacter(long guildId, long wowCharId) {
+        List<Wow2DcMapping> result =
+                t.query(Wow2DcMapping.class, "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? AND wow_char_id = ? ORDER BY wow_char_rank ASC", guildId, wowCharId);
+        return result.isEmpty() ? null : result.getFirst();
+    }
+
     public Set<Long> existingCharactersForGuild(long guildId) {
         List<WowCharId> charIds =
                 t.query(WowCharId.class, "SELECT wow_char_id FROM dc_acc2wow_char WHERE guild_id = ?", guildId);
@@ -47,7 +53,7 @@ public class DbGuildCharacters {
         t.update("INSERT INTO dc_acc2wow_char (guild_id, wow_char_id, wow_char_server, wow_char_name, wow_char_rank) VALUES (?, ?, ?, ?, ?)", wowCharacter.guildId(), wowCharacter.wowCharId(), wowCharacter.wowCharServer(), wowCharacter.wowCharName(), wowCharacter.wowCharRank());
     }
 
-    public void update(WowCharacter wowCharacter) {
+    public void update(DbGuildCharacters.WowCharacter wowCharacter) {
         t.update("UPDATE dc_acc2wow_char SET wow_char_server = ?, wow_char_name = ?, wow_char_rank = ? WHERE guild_id = ? AND wow_char_id = ?", wowCharacter.wowCharServer(), wowCharacter.wowCharName(), wowCharacter.wowCharRank(), wowCharacter.guildId(), wowCharacter.wowCharId());
     }
 

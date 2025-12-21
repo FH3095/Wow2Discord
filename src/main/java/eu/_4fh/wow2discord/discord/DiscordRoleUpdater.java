@@ -4,6 +4,7 @@ import eu._4fh.wow2discord.db.DbGuildCharacters.Wow2DcMapping;
 import eu._4fh.wow2discord.db.DbGuilds.DbGuild;
 import eu._4fh.wow2discord.db.Transaction;
 import eu._4fh.wow2discord.util.Config;
+import eu._4fh.wow2discord.util.Log;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogChange;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
@@ -16,11 +17,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
 
 public class DiscordRoleUpdater {
+    private final Logger log = Log.getLog(this);
+
     private final DbGuild dbGuild;
     private final Guild dcGuild;
     private final Map<Long, Member> members;
@@ -129,17 +133,15 @@ public class DiscordRoleUpdater {
         Member member = members.get(userId);
         List<Role> newRoleObjects = newRoles.stream().map(dcGuild::getRoleById).toList();
         List<Role> removeRoleObjects = removeRoles.stream().map(dcGuild::getRoleById).toList();
+
+        String newRoleNames = newRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
+        String removeRoleNames =
+                removeRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
+        log.info(() -> "Change roles for " + member.getEffectiveName() + ". New Roles: " + newRoleNames +
+                "; Remove Roles: " + removeRoleNames);
+
         if (Config.doChangeRoles) {
             dcGuild.modifyMemberRoles(member, newRoleObjects, removeRoleObjects).queue();
-        } else {
-            String newRoleNames =
-                    newRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
-            String removeRoleNames =
-                    removeRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
-            Discord.i()
-                   .sendMessage(dbGuild.channelId(),
-                           "Change roles for " + member.getEffectiveName() + ". New Roles: " + newRoleNames +
-                                   "; Remove Roles: " + removeRoleNames);
         }
     }
 }

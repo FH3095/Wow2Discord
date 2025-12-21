@@ -2,6 +2,7 @@ package eu._4fh.wow2discord.wow;
 
 import eu._4fh.abstract_bnet_api.restclient.data.BattleNetWowCharacter;
 import eu._4fh.wow2discord.db.DbGuildCharacters;
+import eu._4fh.wow2discord.db.DbGuildCharacters.Wow2DcMapping;
 import eu._4fh.wow2discord.db.DbGuilds.DbGuild;
 import eu._4fh.wow2discord.db.Transaction;
 import eu._4fh.wow2discord.discord.Discord;
@@ -10,10 +11,7 @@ import eu._4fh.wow2discord.util.CronTasks;
 import eu._4fh.wow2discord.util.Log;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -84,18 +82,25 @@ public class GuildCheck {
     }
 
     /**
-     * Removed characters that are no longer in the guild
+     * Removes characters that are no longer in the guild
      */
     private void removeCharacters(DbGuild guild, Set<Long> removedFromGuild) {
+        List<String> removedCharacterNames = new ArrayList<>(removedFromGuild.size());
         try (Transaction t = new Transaction()) {
             for (long removedCharacterId : removedFromGuild) {
+                Wow2DcMapping character = t.guildCharacters.getWowCharacter(guild.guildId(), removedCharacterId);
+                if (character != null) {
+                    removedCharacterNames.add(
+                            character.wowCharName() + "-" + character.wowCharServer() + "(" + character.wowCharRank() +
+                                    ") (" + character.dcName() + ")");
+                }
                 t.guildCharacters.remove(guild.guildId(), removedCharacterId);
             }
             t.commit();
         }
         if (!removedFromGuild.isEmpty()) {
             log.info(() -> "Removed characters from " + guild.wowName() + "_" + guild.wowRealm() + ": " +
-                    removedFromGuild);
+                    removedCharacterNames);
         }
     }
 }
