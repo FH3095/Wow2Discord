@@ -2,10 +2,13 @@ package eu._4fh.wow2discord.discord;
 
 import eu._4fh.wow2discord.db.DbGuilds.DbGuild;
 import eu._4fh.wow2discord.db.Transaction;
+import eu._4fh.wow2discord.util.Config;
+import eu._4fh.wow2discord.util.CronTasks;
 import eu._4fh.wow2discord.util.Log;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -14,8 +17,7 @@ public class DiscordCheck {
     private final Logger log = Log.getLog(this);
 
     public void start() {
-        //CronTasks.i().executeRegularly(this::runCheck, Duration.ofHours(Config.discordCheckInterval));
-        runCheck();
+        CronTasks.i().executeRegularly(this::runCheck, Duration.ofHours(Config.discordCheckInterval));
     }
 
     private void runCheck() {

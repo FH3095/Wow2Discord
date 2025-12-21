@@ -7,6 +7,7 @@ import eu._4fh.wow2discord.discord.LastOnlineListener;
 import eu._4fh.wow2discord.discord.WowCommandHandler;
 import eu._4fh.wow2discord.util.CronTasks;
 import eu._4fh.wow2discord.wow.BnetClients;
+import eu._4fh.wow2discord.wow.GuildCheck;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,8 +51,8 @@ public class Main {
              var ignoredDb = new Db();
              var ignoredDiscord = new Discord(new LastOnlineListener(), new WowCommandHandler())) {
 
+            new GuildCheck().start();
             new DiscordCheck().start();
-            //new GuildCheck().start();
 
             while (checkPidFile(ownPid)) {
                 try {
