@@ -2,12 +2,17 @@ package eu._4fh.wow2discord.db;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Class to update the table dc_online_users.
  * There is saved when a user was last seen online.
  */
 public class DbOnlineUsers {
+    record UserId(long userId) {
+    }
+
     private final Transaction t;
 
     DbOnlineUsers(Transaction t) {
@@ -32,5 +37,12 @@ public class DbOnlineUsers {
                 "UPDATE dc_online_users SET last_online = ?, member_name = ? WHERE guild_id = ? AND member_id = ?",
                 Instant.now(), name, guildId, userId);
         assert updated == 1 : "Not correctly updated " + updated + " for " + guildId + " " + userId;
+    }
+
+    public Set<Long> usersRecentlyOnline(long guildId, Instant lastOnlineAfter) {
+        List<UserId> longOfflineUserIds = t.query(UserId.class,
+                "SELECT member_id FROM dc_online_users WHERE guild_id = ? AND last_online >= ?", guildId,
+                lastOnlineAfter);
+        return longOfflineUserIds.stream().map(UserId::userId).collect(Collectors.toUnmodifiableSet());
     }
 }

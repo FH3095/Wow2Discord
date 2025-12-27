@@ -37,6 +37,7 @@ public class DiscordCheck {
 
             updateDcMemberNames(dbGuild.guildId(), members);
             new DiscordRoleUpdater(dbGuild, dcGuild, members).updateRoles();
+            new LastOnlineRolesUpdater(dbGuild, dcGuild, members).updateRoles();
         }
     }
 

@@ -22,14 +22,20 @@ import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
 
-public class DiscordRoleUpdater {
+/**
+ * Updates the discord roles according to the wow ranks
+ */
+class DiscordRoleUpdater {
     private final Logger log = Log.getLog(this);
 
     private final DbGuild dbGuild;
     private final Guild dcGuild;
     private final Map<Long, Member> members;
+    /// Mapping von WOW Ranks to Discord Roles
     private final Map<Byte, Set<Long>> wowRanksToRoles;
+    /// List of Users with the roles they were added to within the last 7 days
     private final Map<Long, Set<Long>> addedRoles;
+    /// Roles we manage at all.
     private final Set<Long> managedRoles;
 
     public DiscordRoleUpdater(DbGuild dbGuild, Guild dcGuild, List<Member> members) {
@@ -49,11 +55,16 @@ public class DiscordRoleUpdater {
         }
     }
 
+    /***
+     * Get the Audit Logs to get which user was added to which role within the last 7 days
+     */
     private Map<Long, Set<Long>> getAddedRolesPerUserWithin7Days(Guild dcGuild) {
         Map<Long, Set<Long>> result = new HashMap<>();
         Instant oneWeekAgo = Instant.now().minus(Duration.ofDays(7)).truncatedTo(ChronoUnit.DAYS);
-        List<AuditLogEntry> logEntries =
-                dcGuild.retrieveAuditLogs().type(ActionType.MEMBER_ROLE_UPDATE).cache(false).complete();
+        List<AuditLogEntry> logEntries = dcGuild.retrieveAuditLogs()
+                .type(ActionType.MEMBER_ROLE_UPDATE)
+                .cache(false)
+                .complete();
         for (AuditLogEntry entry : logEntries) {
             if (entry.getTimeCreated().toInstant().isBefore(oneWeekAgo)) {
                 continue;
@@ -69,6 +80,10 @@ public class DiscordRoleUpdater {
         return Collections.unmodifiableMap(result);
     }
 
+    /**
+     * Go through each wow character, return a Map of Discord-User-IDs with the Roles they SHOULD have according
+     * to their wow Rank.
+     */
     private Map<Long, Set<Long>> calcRolesPerUserByWowRank() {
         List<Wow2DcMapping> characters;
         try (Transaction t = new Transaction()) {
@@ -85,31 +100,39 @@ public class DiscordRoleUpdater {
         return result;
     }
 
+    /**
+     * Go through each DC User and fetch the Roles they have that we manage.
+     */
     private Map<Long, Set<Long>> getDcRolesPerUser() {
         Map<Long, Set<Long>> result = new HashMap<>(members.size());
         for (Member member : members.values()) {
             Set<Long> managedRoleMemberships = member.getUnsortedRoles()
-                                                     .stream()
-                                                     .map(Role::getIdLong)
-                                                     .filter(managedRoles::contains)
-                                                     .collect(Collectors.toCollection(HashSet::new));
+                    .stream()
+                    .map(Role::getIdLong)
+                    .filter(managedRoles::contains)
+                    .collect(Collectors.toUnmodifiableSet());
             result.put(member.getIdLong(), managedRoleMemberships);
         }
         return result;
     }
 
+    /**
+     * Actually update the discord Roles
+     */
     public void updateRoles() {
         Map<Long, Set<Long>> wowRolesPerUser = calcRolesPerUserByWowRank();
         Map<Long, Set<Long>> dcRolesPerUser = getDcRolesPerUser();
 
         for (long userId : dcRolesPerUser.keySet()) {
             Set<Long> dcRoles = dcRolesPerUser.get(userId);
+            // Probably a user left the guild, then this user has no wow role at all
             Set<Long> wowRoles = wowRolesPerUser.getOrDefault(userId, Set.of());
 
             Set<Long> newRoles = new HashSet<>(wowRoles);
             newRoles.removeAll(dcRoles);
             Set<Long> removeRoles = new HashSet<>(dcRoles);
             removeRoles.removeAll(wowRoles);
+            // We do not want to change roles, to which the user was added recently
             removeRoles.removeAll(addedRoles.getOrDefault(userId, Set.of()));
 
             updateUserRoles(userId, newRoles, removeRoles);
@@ -135,10 +158,11 @@ public class DiscordRoleUpdater {
         List<Role> removeRoleObjects = removeRoles.stream().map(dcGuild::getRoleById).toList();
 
         String newRoleNames = newRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
-        String removeRoleNames =
-                removeRoleObjects.stream().map(Role::getName).collect(Collectors.joining(", ", "[", "]"));
-        log.info(() -> "Change roles for " + member.getEffectiveName() + ". New Roles: " + newRoleNames +
-                "; Remove Roles: " + removeRoleNames);
+        String removeRoleNames = removeRoleObjects.stream()
+                .map(Role::getName)
+                .collect(Collectors.joining(", ", "[", "]"));
+        log.info(
+                () -> "Change roles for " + member.getEffectiveName() + ". New Roles: " + newRoleNames + "; Remove Roles: " + removeRoleNames);
 
         if (Config.doChangeRoles) {
             dcGuild.modifyMemberRoles(member, newRoleObjects, removeRoleObjects).queue();
