@@ -51,15 +51,16 @@ public class CronTasks implements AutoCloseable {
         Instant now = Instant.now();
         Instant nextDayStart = now.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
         long secondsTillNextDay = ChronoUnit.SECONDS.between(now, nextDayStart);
-        taskStarter.scheduleAtFixedRate(() -> executeAndLog(command), secondsTillNextDay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
+        taskStarter.scheduleAtFixedRate(() -> executeAndLog(command), secondsTillNextDay, TimeUnit.DAYS.toSeconds(1),
+                TimeUnit.SECONDS);
     }
 
     public void executeRegularly(Runnable command, Duration interval) {
-        long intervalInSeconds = interval.toSeconds();
-        if (intervalInSeconds < 1) {
-            throw new IllegalArgumentException("Interval " + interval + " is less than one second");
+        long intervalInMinutes = interval.toMinutes();
+        if (intervalInMinutes < 1) {
+            throw new IllegalArgumentException("Interval " + interval + " is less than one minute");
         }
         // We execute the task directly with some delay
-        taskStarter.scheduleWithFixedDelay(() -> executeAndLog(command), 30, intervalInSeconds, TimeUnit.SECONDS);
+        taskStarter.scheduleWithFixedDelay(() -> executeAndLog(command), 30, intervalInMinutes, TimeUnit.MINUTES);
     }
 }
