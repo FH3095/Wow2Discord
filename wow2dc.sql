@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 21. Dez 2025 um 22:28
+-- Erstellungszeit: 28. Dez 2025 um 03:21
 -- Server-Version: 11.8.3-MariaDB-0+deb13u1 from Debian
--- PHP-Version: 8.4.11
+-- PHP-Version: 8.4.16
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -17,64 +17,75 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Datenbank: wow2dc
---
-
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle dc_acc2wow_char
+-- Tabellenstruktur für Tabelle `dc_acc2wow_char`
 --
 
-CREATE TABLE dc_acc2wow_char (
-  guild_id bigint(20) UNSIGNED NOT NULL,
-  wow_char_id bigint(20) UNSIGNED NOT NULL,
-  wow_char_server varchar(64) NOT NULL,
-  wow_char_name varchar(64) NOT NULL,
-  wow_char_rank tinyint(4) NOT NULL,
-  dc_id bigint(20) UNSIGNED DEFAULT NULL,
-  dc_member_name varchar(64) DEFAULT NULL
+CREATE TABLE `dc_acc2wow_char` (
+  `guild_id` bigint(20) UNSIGNED NOT NULL,
+  `wow_char_id` bigint(20) UNSIGNED NOT NULL,
+  `wow_char_server` varchar(64) NOT NULL,
+  `wow_char_name` varchar(64) NOT NULL,
+  `wow_char_rank` tinyint(4) NOT NULL,
+  `dc_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `dc_member_name` varchar(64) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle dc_online_users
+-- Tabellenstruktur für Tabelle `dc_online_users`
 --
 
-CREATE TABLE dc_online_users (
-  guild_id bigint(20) UNSIGNED NOT NULL,
-  member_id bigint(20) UNSIGNED NOT NULL,
-  last_online date NOT NULL,
-  member_name varchar(64) NOT NULL
+CREATE TABLE `dc_online_users` (
+  `guild_id` bigint(20) UNSIGNED NOT NULL,
+  `member_id` bigint(20) UNSIGNED NOT NULL,
+  `last_online` date NOT NULL,
+  `member_name` varchar(64) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle dc_settings
+-- Tabellenstruktur für Tabelle `dc_online_users_inactive_check`
 --
 
-CREATE TABLE dc_settings (
-  guild_id bigint(20) UNSIGNED NOT NULL,
-  channel_id bigint(20) UNSIGNED NOT NULL,
-  wow_guild_id bigint(20) NOT NULL,
-  wow_region varchar(4) NOT NULL,
-  wow_realm_slug varchar(64) NOT NULL,
-  wow_name_slug varchar(64) NOT NULL
+CREATE TABLE `dc_online_users_inactive_check` (
+  `guild_id` bigint(20) UNSIGNED NOT NULL,
+  `role_id` bigint(20) UNSIGNED NOT NULL,
+  `comment` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle wow_rank2dc_role
+-- Tabellenstruktur für Tabelle `dc_settings`
 --
 
-CREATE TABLE wow_rank2dc_role (
-  guild_id bigint(20) UNSIGNED NOT NULL,
-  wow_rank tinyint(3) UNSIGNED NOT NULL,
-  role_id bigint(20) UNSIGNED NOT NULL
+CREATE TABLE `dc_settings` (
+  `guild_id` bigint(20) UNSIGNED NOT NULL,
+  `channel_id` bigint(20) UNSIGNED NOT NULL,
+  `inactivity_remove_after_days` smallint(5) UNSIGNED NOT NULL DEFAULT 1096,
+  `last_online_save_started` date NOT NULL DEFAULT current_timestamp(),
+  `wow_guild_id` bigint(20) NOT NULL,
+  `wow_region` varchar(4) NOT NULL,
+  `wow_realm_slug` varchar(64) NOT NULL,
+  `wow_name_slug` varchar(64) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `wow_rank2dc_role`
+--
+
+CREATE TABLE `wow_rank2dc_role` (
+  `guild_id` bigint(20) UNSIGNED NOT NULL,
+  `wow_rank` tinyint(3) UNSIGNED NOT NULL,
+  `role_id` bigint(20) UNSIGNED NOT NULL,
+  `comment` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 --
@@ -82,31 +93,39 @@ CREATE TABLE wow_rank2dc_role (
 --
 
 --
--- Indizes für die Tabelle dc_acc2wow_char
+-- Indizes für die Tabelle `dc_acc2wow_char`
 --
-ALTER TABLE dc_acc2wow_char
-  ADD PRIMARY KEY (guild_id,wow_char_id),
-  ADD KEY idx_dc_acc2wow_char_dc_id (dc_id) USING BTREE,
-  ADD KEY idx_dc_acc2wow_char_wow_char_name (wow_char_name) USING BTREE;
+ALTER TABLE `dc_acc2wow_char`
+  ADD PRIMARY KEY (`guild_id`,`wow_char_id`),
+  ADD KEY `idx_DbGuildCharacters_AllUnlinkedMappingsWithNameMatch` (`guild_id`,`wow_char_name`) USING BTREE,
+  ADD KEY `idx_DbGuildCharacters_update` (`guild_id`,`dc_id`) USING BTREE;
 
 --
--- Indizes für die Tabelle dc_online_users
+-- Indizes für die Tabelle `dc_online_users`
 --
-ALTER TABLE dc_online_users
-  ADD PRIMARY KEY (guild_id,member_id);
+ALTER TABLE `dc_online_users`
+  ADD PRIMARY KEY (`guild_id`,`member_id`),
+  ADD KEY `idx_DbOnlineUsers_usersRecentlyOnline` (`guild_id`,`last_online`) USING BTREE;
 
 --
--- Indizes für die Tabelle dc_settings
+-- Indizes für die Tabelle `dc_online_users_inactive_check`
 --
-ALTER TABLE dc_settings
-  ADD PRIMARY KEY (guild_id);
+ALTER TABLE `dc_online_users_inactive_check`
+  ADD PRIMARY KEY (`guild_id`,`role_id`);
 
 --
--- Indizes für die Tabelle wow_rank2dc_role
+-- Indizes für die Tabelle `dc_settings`
 --
-ALTER TABLE wow_rank2dc_role
-  ADD PRIMARY KEY (guild_id,wow_rank,role_id),
-  ADD KEY idx_dc_role2wow_rank_guild_id (guild_id);
+ALTER TABLE `dc_settings`
+  ADD PRIMARY KEY (`guild_id`),
+  ADD UNIQUE KEY `uniq_dc_settings_wow_region_realm_name` (`wow_region`,`wow_realm_slug`,`wow_name_slug`) USING BTREE,
+  ADD UNIQUE KEY `uniq_dc_settings_wow_region_id` (`wow_region`,`wow_guild_id`) USING BTREE;
+
+--
+-- Indizes für die Tabelle `wow_rank2dc_role`
+--
+ALTER TABLE `wow_rank2dc_role`
+  ADD PRIMARY KEY (`guild_id`,`wow_rank`,`role_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
