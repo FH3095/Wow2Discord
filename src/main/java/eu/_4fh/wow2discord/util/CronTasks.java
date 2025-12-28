@@ -61,6 +61,7 @@ public class CronTasks implements AutoCloseable {
             throw new IllegalArgumentException("Interval " + interval + " is less than one minute");
         }
         // We execute the task directly with some delay
-        taskStarter.scheduleWithFixedDelay(() -> executeAndLog(command), 30, intervalInMinutes, TimeUnit.MINUTES);
+        taskStarter.scheduleWithFixedDelay(() -> executeAndLog(command), 30,
+                TimeUnit.MINUTES.toSeconds(intervalInMinutes), TimeUnit.SECONDS);
     }
 }
