@@ -9,6 +9,7 @@ import eu._4fh.wow2discord.discord.Discord;
 import eu._4fh.wow2discord.util.Config;
 import eu._4fh.wow2discord.util.CronTasks;
 import eu._4fh.wow2discord.util.Log;
+import net.dv8tion.jda.api.entities.Guild;
 
 import java.time.Duration;
 import java.util.*;
@@ -34,6 +35,11 @@ public class GuildCheck {
             guilds = t.guilds.getGuilds();
         }
         for (DbGuild guild : guilds) {
+            Guild dcGuild = Discord.i().getGuild(guild.guildId());
+            if (dcGuild == null) {
+                // Guild no longer available or wrong shard?
+                continue;
+            }
             WowDcComparator comparator = new WowDcComparator(guild);
             announceAndSaveNewCharacters(guild, comparator.getNewInGuild(), comparator.getBnetCharacters());
             updateCharacters(guild, comparator.getStayedInGuildCharacters());
@@ -51,19 +57,17 @@ public class GuildCheck {
             for (long newCharacterId : newInGuild) {
                 BattleNetWowCharacter character = bnetCharacters.get(newCharacterId);
 
-                log.info(() -> "New character for guild " + guild.wowName() + "-" + guild.wowRealm() + "(" +
-                        guild.wowGuildId() + "): " + character.name + "_" + character.realmSlug + " (" + character.id +
-                        ")");
+                log.info(
+                        () -> "New character for guild " + guild.wowName() + "-" + guild.wowRealm() + "(" + guild.wowGuildId() + "): " + character.name + "_" + character.realmSlug + " (" + character.id + ")");
 
                 if (announcedCharacters < Config.maxAnnouncedCharactersAtOnce) {
-                    String message = "New character in guild: " + character.name + "-" + character.realmSlug + " (" +
-                            character.id + ") with rank " + character.guildRank +
-                            ". To assign the character to a discord account use `/wow link " + character.id +
-                            " DiscordUsername`";
+                    String message = "New character in guild: " + character.name + "-" + character.realmSlug + " (" + character.id + ") with rank " + character.guildRank + ". To assign the character to a discord account use `/wow link " + character.id + " DiscordUsername`";
                     discord.sendMessage(guild.channelId(), message);
                     announcedCharacters++;
                 }
-                t.guildCharacters.insert(new DbGuildCharacters.WowCharacter(guild.guildId(), character.id, character.realmSlug, character.name, Objects.requireNonNullElse(character.guildRank, (byte) 127)));
+                t.guildCharacters.insert(
+                        new DbGuildCharacters.WowCharacter(guild.guildId(), character.id, character.realmSlug,
+                                character.name, Objects.requireNonNullElse(character.guildRank, (byte) 127)));
             }
             t.commit();
         }
@@ -75,7 +79,9 @@ public class GuildCheck {
     private void updateCharacters(DbGuild guild, Map<Long, BattleNetWowCharacter> stayedInGuildCharacters) {
         try (Transaction t = new Transaction()) {
             for (BattleNetWowCharacter character : stayedInGuildCharacters.values()) {
-                t.guildCharacters.update(new DbGuildCharacters.WowCharacter(guild.guildId(), character.id, character.realmSlug, character.name, Objects.requireNonNullElse(character.guildRank, (byte) 127)));
+                t.guildCharacters.update(
+                        new DbGuildCharacters.WowCharacter(guild.guildId(), character.id, character.realmSlug,
+                                character.name, Objects.requireNonNullElse(character.guildRank, (byte) 127)));
             }
             t.commit();
         }
@@ -91,16 +97,15 @@ public class GuildCheck {
                 Wow2DcMapping character = t.guildCharacters.getWowCharacter(guild.guildId(), removedCharacterId);
                 if (character != null) {
                     removedCharacterNames.add(
-                            character.wowCharName() + "-" + character.wowCharServer() + "(" + character.wowCharRank() +
-                                    ") (" + character.dcName() + ")");
+                            character.wowCharName() + "-" + character.wowCharServer() + "(" + character.wowCharRank() + ") (" + character.dcName() + ")");
                 }
                 t.guildCharacters.remove(guild.guildId(), removedCharacterId);
             }
             t.commit();
         }
         if (!removedFromGuild.isEmpty()) {
-            log.info(() -> "Removed characters from " + guild.wowName() + "_" + guild.wowRealm() + ": " +
-                    removedCharacterNames);
+            log.info(
+                    () -> "Removed characters from " + guild.wowName() + "_" + guild.wowRealm() + ": " + removedCharacterNames);
         }
     }
 }
