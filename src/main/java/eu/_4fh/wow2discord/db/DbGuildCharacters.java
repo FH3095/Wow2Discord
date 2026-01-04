@@ -30,36 +30,58 @@ public class DbGuildCharacters {
     }
 
     public Wow2DcMapping getWowCharacter(long guildId, long wowCharId) {
-        List<Wow2DcMapping> result =
-                t.query(Wow2DcMapping.class, "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? AND wow_char_id = ? ORDER BY wow_char_rank ASC", guildId, wowCharId);
+        List<Wow2DcMapping> result = t.query(Wow2DcMapping.class,
+                "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? AND wow_char_id = ? ORDER BY wow_char_rank ASC",
+                guildId, wowCharId);
         return result.isEmpty() ? null : result.getFirst();
     }
 
     public Set<Long> existingCharactersForGuild(long guildId) {
-        List<WowCharId> charIds =
-                t.query(WowCharId.class, "SELECT wow_char_id FROM dc_acc2wow_char WHERE guild_id = ?", guildId);
+        List<WowCharId> charIds = t.query(WowCharId.class, "SELECT wow_char_id FROM dc_acc2wow_char WHERE guild_id = ?",
+                guildId);
         return charIds.stream().map(WowCharId::charId).collect(Collectors.toUnmodifiableSet());
     }
 
     public List<Wow2DcMapping> getAllMappingsOrderedByRank(long guildId) {
-        return t.query(Wow2DcMapping.class, "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? ORDER BY wow_char_rank ASC", guildId);
+        return t.query(Wow2DcMapping.class,
+                "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? ORDER BY wow_char_rank ASC",
+                guildId);
     }
 
     public List<Wow2DcMapping> getAllUnlinkedMappingsWithNameMatchOrderedByRankLimit25(long guildId, String namePattern) {
-        return t.query(Wow2DcMapping.class, "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? AND wow_char_name LIKE ? AND dc_id IS NULL ORDER BY wow_char_rank ASC LIMIT 25", guildId, namePattern);
+        return t.query(Wow2DcMapping.class,
+                "SELECT wow_char_id, wow_char_server, wow_char_name, wow_char_rank, dc_id, dc_member_name FROM dc_acc2wow_char WHERE guild_id = ? AND wow_char_name LIKE ? AND dc_id IS NULL ORDER BY wow_char_rank ASC LIMIT 25",
+                guildId, namePattern);
+    }
+
+    /**
+     * Removes all discord-user-ids from characters when the user-id is not in the given Set.
+     */
+    public long removeDiscordAccountsOtherThan(long guildId, Set<Long> memberIds) {
+        String memberIdsStr = memberIds.stream().map(Long::toUnsignedString).collect(Collectors.joining(", "));
+        return t.update(
+                "UPDATE dc_acc2wow_char SET dc_id = NULL, dc_member_name = NULL WHERE guild_id = ? AND dc_id IS NOT NULL AND dc_id NOT IN (" + memberIdsStr + ")",
+                guildId);
     }
 
     public void insert(WowCharacter wowCharacter) {
-        t.update("INSERT INTO dc_acc2wow_char (guild_id, wow_char_id, wow_char_server, wow_char_name, wow_char_rank) VALUES (?, ?, ?, ?, ?)", wowCharacter.guildId(), wowCharacter.wowCharId(), wowCharacter.wowCharServer(), wowCharacter.wowCharName(), wowCharacter.wowCharRank());
+        t.update(
+                "INSERT INTO dc_acc2wow_char (guild_id, wow_char_id, wow_char_server, wow_char_name, wow_char_rank) VALUES (?, ?, ?, ?, ?)",
+                wowCharacter.guildId(), wowCharacter.wowCharId(), wowCharacter.wowCharServer(),
+                wowCharacter.wowCharName(), wowCharacter.wowCharRank());
     }
 
     public void update(DbGuildCharacters.WowCharacter wowCharacter) {
-        t.update("UPDATE dc_acc2wow_char SET wow_char_server = ?, wow_char_name = ?, wow_char_rank = ? WHERE guild_id = ? AND wow_char_id = ?", wowCharacter.wowCharServer(), wowCharacter.wowCharName(), wowCharacter.wowCharRank(), wowCharacter.guildId(), wowCharacter.wowCharId());
+        t.update(
+                "UPDATE dc_acc2wow_char SET wow_char_server = ?, wow_char_name = ?, wow_char_rank = ? WHERE guild_id = ? AND wow_char_id = ?",
+                wowCharacter.wowCharServer(), wowCharacter.wowCharName(), wowCharacter.wowCharRank(),
+                wowCharacter.guildId(), wowCharacter.wowCharId());
     }
 
     public boolean update(Wow2Dc wow2Dc) {
-        long updated =
-                t.update("UPDATE dc_acc2wow_char SET dc_id = ?, dc_member_name = ? WHERE guild_id = ? AND wow_char_id = ?", wow2Dc.dcId, wow2Dc.dcName, wow2Dc.guildId, wow2Dc.charId);
+        long updated = t.update(
+                "UPDATE dc_acc2wow_char SET dc_id = ?, dc_member_name = ? WHERE guild_id = ? AND wow_char_id = ?",
+                wow2Dc.dcId, wow2Dc.dcName, wow2Dc.guildId, wow2Dc.charId);
         return updated > 0;
     }
 
@@ -67,7 +89,8 @@ public class DbGuildCharacters {
      * Updates all entries for a specific discord user with its username
      */
     public void update(long guildId, long dcId, String dcName) {
-        t.update("UPDATE dc_acc2wow_char SET dc_member_name = ? WHERE guild_id = ? AND dc_id = ?", dcName, guildId, dcId);
+        t.update("UPDATE dc_acc2wow_char SET dc_member_name = ? WHERE guild_id = ? AND dc_id = ?", dcName, guildId,
+                dcId);
     }
 
     public void remove(long guildId, long wowCharacterId) {
