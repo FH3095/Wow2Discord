@@ -154,6 +154,10 @@ class DiscordRoleUpdater {
         }
 
         Member member = members.get(userId);
+        if (member == null) {
+            log.info(() -> "Cant change roles for user " + userId + ", because user is not on the discord server.");
+            return;
+        }
         List<Role> newRoleObjects = newRoles.stream().map(dcGuild::getRoleById).toList();
         List<Role> removeRoleObjects = removeRoles.stream().map(dcGuild::getRoleById).toList();
 
